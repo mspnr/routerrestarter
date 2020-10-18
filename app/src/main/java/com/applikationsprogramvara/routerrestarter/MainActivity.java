@@ -2,7 +2,11 @@ package com.applikationsprogramvara.routerrestarter;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     public static final int STEP6_RESTART = 6;
     public static final int STEP7_TRIGGERED = 7;
     public static final int PROCESSING_ABORTED = 9;
+
+    public static final String RESULT_OK = "OK";
+    public static final String RESULT_TIMEOUT = "Timeout";
 
     AtomicInteger step = new AtomicInteger();;
     private SharedPreferences prefs;
@@ -197,22 +204,38 @@ public class MainActivity extends AppCompatActivity {
         return ((CheckBox) findViewById(R.id.checkboxTest)).isChecked();
     }
 
-    private void log(String s) {
-        Log.d("MyApp", s);
+    private void log(String string) {
+        Log.d("MyApp", string);
 
         runOnUiThread(() -> {
-            TextView textview = findViewById(R.id.tvLog);
-            textview.setText(
+            SpannableString sp = new SpannableString(string);
+            sp = colorize(sp, RESULT_OK, Color.GREEN);
+            sp = colorize(sp, RESULT_TIMEOUT, Color.RED);
 
-                    textview.getText().toString() + '\n' +
-                    "" + sdf.format(new Date()) + " " +
-                    s
-            );
+            TextView textview = findViewById(R.id.tvLog);
+            textview.append("\n" + sdf.format(new Date()) + " ");
+            textview.append(sp);
 
             ScrollView scrollView = findViewById(R.id.scrollView);
             scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
 
         });
+    }
+
+    private static SpannableString colorize(SpannableString input, String subString, int color) {
+        SpannableString output = new SpannableString(input);
+
+        int last = 0;
+        int current;
+        do {
+            current = input.toString().indexOf(subString, last);
+            if (current >= 0) {
+                output.setSpan(new ForegroundColorSpan(color), current, current + subString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                last = current + subString.length();
+            }
+        } while (current >= 0);
+
+        return output;
     }
 
     public void clickClear(View view) {
@@ -229,10 +252,10 @@ public class MainActivity extends AppCompatActivity {
                 while (((SwitchCompat) view).isChecked()) {
 
                     String routerPing = "router " +
-                            (ping(getRouterAddress()) ? "OK" : "Timeout");
+                            (ping(getRouterAddress()) ? RESULT_OK : RESULT_TIMEOUT);
 
                     String externalPing = "external " +
-                        (ping(getExternalWebsite()) ? "OK" : "Timeout");
+                        (ping(getExternalWebsite()) ? RESULT_OK : RESULT_TIMEOUT);
 
                     log(routerPing + " " + externalPing);
 
