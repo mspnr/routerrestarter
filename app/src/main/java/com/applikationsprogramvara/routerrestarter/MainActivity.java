@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                             script = "isLoggedIn();";
                             log("test mode on");
                         } else
-                            script = "updateServerRecord('php/ajaxSet_status_restart.php', {'RestartReset': 'Restart'}, null, 0, null, true);";
+                            script = "communicateToServer('POST', 'php/ajaxSet_status_restart.php', {'RestartReset': 'Restart'}, null, 0, null, true);";
                         webView.evaluateJavascript(
 //                                "",
 //                                "storeData('Restart');",
